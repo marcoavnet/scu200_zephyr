@@ -7,7 +7,7 @@
 
 # Set the reference directory for source file relative paths (by default the value is script directory path)
 set origin_dir [pwd]
-set proj_name "scu35_zephyr"
+set proj_name "scu200_zephyr"
 set bd_name "system"
 set build_dir $origin_dir
 set tcl_dir $build_dir/../../tcl
@@ -15,7 +15,7 @@ set src_dir $build_dir/../../sources
 set constr_dir $src_dir/constrs/
 
 # Create project
-create_project ${proj_name} $build_dir -part xcsu35p-sbvb625-2-e
+create_project ${proj_name} $build_dir -part xcsu200p-sbva1024-2-e
 
 
 # Rebuild user ip_repo's index before adding any source files
@@ -24,7 +24,7 @@ update_ip_catalog -rebuild
 
 # Set project properties
 set obj [current_project]
-set_property -name "board_part" -value "xilinx.com:scu35:part0:1.0" -objects $obj
+set_property -name "board_part" -value "xilinx.com:scu200:part0:1.0" -objects $obj
 set_property -name "target_language" -value "VHDL" -objects $obj
 set_property -name "enable_vhdl_2008" -value "1" -objects $obj
 

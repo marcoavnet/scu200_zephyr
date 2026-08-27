@@ -6,7 +6,7 @@
 #******************************************************************************
 
 set origin_dir [pwd]
-set proj_name "scu35_zephyr"
+set proj_name "scu200_zephyr"
 set proj_path $origin_dir/$proj_name.xpr
 
 open_project $proj_path

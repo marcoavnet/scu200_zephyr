@@ -7,7 +7,7 @@
 
 set BUILD_DIR .
 set XSA_DIR $BUILD_DIR
-set PROJ_NAME scu35_zephyr
+set PROJ_NAME scu200_zephyr
 set PROJ_PATH $BUILD_DIR/$PROJ_NAME.xpr
 
 open_project $PROJ_PATH

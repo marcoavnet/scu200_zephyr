@@ -23,7 +23,7 @@ export ZEPHYR_SDK_INSTALL_DIR=$TRD_HOME/sw/tools/zephyr-sdk-0.16.8
 
 **2) Source tools:**
 ```
-source /opt/Xilinx/2025.2/Vivado/settings64.sh
+source /opt/Xilinx/2026.1/Vivado/settings64.sh
 ```
 
 
@@ -42,7 +42,7 @@ make
 **3) generate the system device tree**
 ```
 cd $TRD_HOME/vivado/build
-vitis -s $TRD_HOME/vivado/tools/create_sdt.py --xsa ./prj/scu35_zephyr.xsa --cpu microblaze_riscv_0 --outdir sdt
+vitis -s $TRD_HOME/vivado/tools/create_sdt.py --xsa ./prj/scu200_zephyr.xsa --cpu microblaze_riscv_0 --outdir sdt
 ```
 
 
@@ -64,7 +64,6 @@ git clone https://github.com/Xilinx/zephyr-amd.git -b xlnx_rel_v2026.1 zephyr
 mkdir $TRD_HOME/sw/bld && cd $TRD_HOME/sw/bld
 python3 -m venv zephyr-venv
 source zephyr-venv/bin/activate
-pip install west
 pip install ninja
 pip install -r $TRD_HOME/sw/src/kernel/zephyr/scripts/requirements.txt
 ```
