@@ -1,0 +1,235 @@
+diff --git a/soc/xlnx/mbv32/CMakeLists.txt b/soc/xlnx/mbv32/CMakeLists.txt
+index d53aa5fe..4a7d22d1 100644
+--- a/soc/xlnx/mbv32/CMakeLists.txt
++++ b/soc/xlnx/mbv32/CMakeLists.txt
+@@ -12,4 +12,6 @@ zephyr_sources(
+ 
+ zephyr_include_directories(.)
+ 
++zephyr_sources_ifdef(CONFIG_MBV_ZICBOM cache.c)
++
+ set(SOC_LINKER_SCRIPT ${ZEPHYR_BASE}/include/zephyr/arch/riscv/common/linker.ld CACHE INTERNAL "")
+diff --git a/soc/xlnx/mbv32/Kconfig b/soc/xlnx/mbv32/Kconfig
+index e1e2511e..fd9256a4 100644
+--- a/soc/xlnx/mbv32/Kconfig
++++ b/soc/xlnx/mbv32/Kconfig
+@@ -27,3 +27,20 @@ config SOC_MBV32
+ 	imply MFD if DT_HAS_XLNX_IOMODULE_ENABLED
+ 	imply XLNX_IOMODULE_INTC if DT_HAS_XLNX_IOMODULE_INTC_ENABLED
+ 	imply XLNX_IOMODULE_PIT if DT_HAS_XLNX_IOMODULE_PIT_ENABLED
++
++if SOC_MBV32
++
++config MBV_ZICBOM
++	bool "MicroBlaze V Zicbom data-cache maintenance"
++	help
++	  Enable data-cache range maintenance for a MicroBlaze V configured
++	  with C_USE_DCACHE=1 and Zicbom. Set DCACHE_LINE_SIZE to the hardware
++	  cache-block size in bytes (4 * C_DCACHE_LINE_LEN for MBV32).
++	  The hardware cache is already active after reset; this option does
++	  not turn a hardware cache on or off. Runtime disabling is unsupported
++	  and traps rather than silently leaving the cache active.
++	  Whole-cache operations are unsupported and return -ENOTSUP.
++	  Use the integrated (ARCH_CACHE) backend. Only single-hart M-mode
++	  operation is supported. Instruction-cache maintenance is not provided.
++
++endif # SOC_MBV32
+diff --git a/soc/xlnx/mbv32/Kconfig.defconfig b/soc/xlnx/mbv32/Kconfig.defconfig
+index af01cc3b..664c3c42 100644
+--- a/soc/xlnx/mbv32/Kconfig.defconfig
++++ b/soc/xlnx/mbv32/Kconfig.defconfig
+@@ -22,4 +22,22 @@ config ARCH_HAS_CUSTOM_CPU_ATOMIC_IDLE
+ config SYS_CLOCK_HW_CYCLES_PER_SEC
+ 	default $(dt_node_int_prop_int,/cpus/cpu@0,clock-frequency)
+ 
++if MBV_ZICBOM
++
++config CPU_HAS_DCACHE
++	default y
++
++config DCACHE
++	default y
++
++config CACHE_MANAGEMENT
++	default y
++
++config DCACHE_LINE_SIZE
++	default $(dt_node_int_prop_int,/cpus/cpu@0,d-cache-line-size) \
++		if $(dt_node_has_prop,/cpus/cpu@0,d-cache-line-size)
++	default 16
++
++endif # MBV_ZICBOM
++
+ endif # SOC_MBV32
+diff --git a/soc/xlnx/mbv32/cache.c b/soc/xlnx/mbv32/cache.c
+new file mode 100644
+index 00000000..db949832
+--- /dev/null
++++ b/soc/xlnx/mbv32/cache.c
+@@ -0,0 +1,117 @@
++/* SPDX-License-Identifier: Apache-2.0 */
++
++/* MicroBlaze V, single-hart M-mode, Zicbom data-cache range operations.
++ * Cache enablement/range are hardware settings, not controlled by Zicbom.
++ */
++
++#include <zephyr/arch/cache.h>
++#include <zephyr/sys/__assert.h>
++#include <zephyr/sys/util.h>
++
++#include "cache_range.h"
++
++BUILD_ASSERT(IS_ENABLED(CONFIG_ARCH_CACHE), "MBV Zicbom requires ARCH_CACHE");
++BUILD_ASSERT(IS_ENABLED(CONFIG_DCACHE) && IS_ENABLED(CONFIG_CACHE_MANAGEMENT),
++	     "MBV Zicbom requires DCACHE and CACHE_MANAGEMENT");
++BUILD_ASSERT(!IS_ENABLED(CONFIG_SMP) && !IS_ENABLED(CONFIG_USERSPACE),
++	     "MBV Zicbom supports single-hart M-mode only");
++BUILD_ASSERT(CONFIG_DCACHE_LINE_SIZE == 16 || CONFIG_DCACHE_LINE_SIZE == 32 ||
++	     CONFIG_DCACHE_LINE_SIZE == 64, "MBV32 cache blocks must be 16, 32 or 64 bytes");
++BUILD_ASSERT(!IS_ENABLED(CONFIG_DCACHE_LINE_SIZE_DETECT),
++	     "Configure the hardware cache-block size explicitly");
++BUILD_ASSERT(!IS_ENABLED(CONFIG_ICACHE),
++	     "This backend provides data-cache maintenance only");
++
++static inline void mbv_cache_fence(void)
++{
++	/* Include I/O ordering: descriptors/buffers must be visible before the
++	 * subsequent MMIO write that hands ownership to the DMA engine.
++	 */
++	__asm__ volatile ("fence iorw, iorw" ::: "memory");
++}
++
++static void mbv_cache_clean_block(uintptr_t block)
++{
++	/* cbo.clean (block): Zicbom opcode 0x0f, funct3 2, imm 1, rd x0.
++	 * .insn avoids requiring the old Zephyr SDK to recognise the Zicbom
++	 * mnemonic or adding Zicbom to the ISA of unrelated source files.
++	 */
++	__asm__ volatile (".insn i 0x0f, 2, x0, %0, 1" :: "r"(block) : "memory");
++}
++
++static void mbv_cache_invalidate_block(uintptr_t block)
++{
++	/* cbo.inval (block). No clean: never overwrite DMA data with stale CPU data. */
++	__asm__ volatile (".insn i 0x0f, 2, x0, %0, 0" :: "r"(block) : "memory");
++}
++
++static void mbv_cache_flush_block(uintptr_t block)
++{
++	/* cbo.flush (block): clean followed by invalidate. */
++	__asm__ volatile (".insn i 0x0f, 2, x0, %0, 2" :: "r"(block) : "memory");
++}
++
++static int mbv_cache_range(void *addr, size_t size, void (*operation)(uintptr_t))
++{
++	int ret;
++
++	mbv_cache_fence();
++	ret = mbv_cache_range_apply(addr, size, CONFIG_DCACHE_LINE_SIZE, operation);
++	mbv_cache_fence();
++	return ret;
++}
++
++int arch_dcache_flush_range(void *addr, size_t size)
++{
++	/* Zephyr's "flush" means clean, not Zicbom's clean-and-invalidate. */
++	return mbv_cache_range(addr, size, mbv_cache_clean_block);
++}
++
++int arch_dcache_invd_range(void *addr, size_t size)
++{
++	return mbv_cache_range(addr, size, mbv_cache_invalidate_block);
++}
++
++int arch_dcache_flush_and_invd_range(void *addr, size_t size)
++{
++	return mbv_cache_range(addr, size, mbv_cache_flush_block);
++}
++
++int arch_dcache_flush_all(void)
++{
++	return -ENOTSUP;
++}
++
++int arch_dcache_invd_all(void)
++{
++	return -ENOTSUP;
++}
++
++int arch_dcache_flush_and_invd_all(void)
++{
++	return -ENOTSUP;
++}
++
++void arch_dcache_enable(void)
++{
++	/* Hardware-configured and active after reset. Nothing to enable. */
++	mbv_cache_fence();
++}
++
++void arch_dcache_disable(void)
++{
++	/* Zicbom has no cache-disable instruction. Do not claim success via a
++	 * no-op: generic callers might subsequently perform incoherent DMA.
++	 * Keep the trap even in a build with CONFIG_ASSERT=n.
++	 */
++	__ASSERT(false, "MBV32 data cache cannot be disabled by this backend");
++	__builtin_trap();
++}
++
++void arch_cache_init(void)
++{
++	/* Hardware invalidates its caches during reset. Do not fence.i here:
++	 * on MBV it also flushes the entire D-cache and is not a range CMO.
++	 */
++	mbv_cache_fence();
++}
+diff --git a/soc/xlnx/mbv32/cache_range.h b/soc/xlnx/mbv32/cache_range.h
+new file mode 100644
+index 00000000..38f7452c
+--- /dev/null
++++ b/soc/xlnx/mbv32/cache_range.h
+@@ -0,0 +1,43 @@
++/* SPDX-License-Identifier: Apache-2.0 */
++
++#ifndef ZEPHYR_SOC_XLNX_MBV32_CACHE_RANGE_H_
++#define ZEPHYR_SOC_XLNX_MBV32_CACHE_RANGE_H_
++
++#include <errno.h>
++#include <stddef.h>
++#include <stdint.h>
++
++/* Visit every intersecting block, including an unaligned first/last block.
++ * Use an inclusive last byte so a range ending at UINTPTR_MAX is valid and
++ * cannot wrap the loop counter. Callers own every cache line invalidated.
++ */
++static inline int mbv_cache_range_apply(void *addr, size_t size, size_t block_size,
++				      void (*operation)(uintptr_t))
++{
++	uintptr_t first = (uintptr_t)addr;
++	uintptr_t last;
++	uintptr_t block;
++
++	if (size == 0U) {
++		return 0;
++	}
++
++	if ((block_size == 0U) || ((block_size & (block_size - 1U)) != 0U) ||
++	    ((size - 1U) > (UINTPTR_MAX - first))) {
++		return -EINVAL;
++	}
++
++	last = (first + size - 1U) & ~(uintptr_t)(block_size - 1U);
++	block = first & ~(uintptr_t)(block_size - 1U);
++	for (;;) {
++		operation(block);
++		if (block == last) {
++			break;
++		}
++		block += block_size;
++	}
++
++	return 0;
++}
++
++#endif /* ZEPHYR_SOC_XLNX_MBV32_CACHE_RANGE_H_ */
