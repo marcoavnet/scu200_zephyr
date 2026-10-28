@@ -1,10 +1,23 @@
 {
   "version": "2.0.0",
+  "inputs": [
+    {
+      "id": "app",
+      "type": "pickString",
+      "description": "Select Zephyr application",
+      "options": [
+        "myapp_shell",
+        "myapp",
+        "myapp_net"
+      ],
+      "default": "myapp_shell"
+    }
+  ],
   "tasks": [
     {
-      "label": "Zephyr: build",
+      "label": "Zephyr: build app",
       "type": "shell",
-      "command": "source ${workspaceFolder}/.vscode/env.sh && west build -b mbv32 ${workspaceFolder}/src/myapp_shell --build-dir $TRD_HOME/sw/bld/myapp_shell",
+      "command": "source ${workspaceFolder}/.vscode/env.sh && west build -b mbv32 ${workspaceFolder}/src/${input:app} --build-dir $TRD_HOME/sw/bld/${input:app}",
       "options": {
         "executable": "/bin/bash"
       },
@@ -17,7 +30,7 @@
     {
       "label": "Zephyr: clean rebuild",
       "type": "shell",
-      "command": "source ${workspaceFolder}/.vscode/env.sh && west build -p always -b mbv32 ${workspaceFolder}/src/myapp_shell --build-dir $TRD_HOME/sw/bld/myapp_shell",
+      "command": "source ${workspaceFolder}/.vscode/env.sh && west build -p always -b mbv32 ${workspaceFolder}/src/${input:app} --build-dir $TRD_HOME/sw/bld/${input:app}",
       "options": {
         "executable": "/bin/bash"
       },
@@ -27,7 +40,7 @@
     {
       "label": "Zephyr: menuconfig",
       "type": "shell",
-      "command": "source ${workspaceFolder}/.vscode/env.sh && west build -t menuconfig --build-dir $TRD_HOME/sw/bld/myapp_shell",
+      "command": "source ${workspaceFolder}/.vscode/env.sh && west build -t menuconfig --build-dir $TRD_HOME/sw/bld/${input:app}",
       "options": {
         "executable": "/bin/bash"
       },
@@ -36,7 +49,7 @@
     {
       "label": "Zephyr: ram report",
       "type": "shell",
-      "command": "source ${workspaceFolder}/.vscode/env.sh && west build -t ram_report --build-dir $TRD_HOME/sw/bld/myapp_shell",
+      "command": "source ${workspaceFolder}/.vscode/env.sh && west build -t ram_report --build-dir $TRD_HOME/sw/bld/${input:app}",
       "options": {
         "executable": "/bin/bash"
       },
