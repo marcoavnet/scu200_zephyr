@@ -112,7 +112,7 @@ make
 ```bash
 cd "$TRD_HOME/vivado/build"
 vitis -s "$TRD_HOME/vivado/tools/create_sdt.py" \
-    --xsa ./prj/scu35_zephyr.xsa \
+    --xsa ./prj/scu200_zephyr.xsa \
     --cpu microblaze_riscv_0 \
     --outdir sdt
 ```
@@ -167,6 +167,13 @@ west init -l .
 west update
 west lopper-install
 ```
+
+The AMD MBV port is lacking cache management which is necessary for the  
+ethernet DMA. Apply it with:
+```bash
+git -C . apply $TRD_HOME/sw/patch/mbv32-zicbom-combined.patch
+```
+
 
 Process the generated system device tree for `microblaze_riscv_0`:
 
@@ -223,6 +230,15 @@ west build -p always -b mbv32 "$TRD_HOME/sw/src/myapp_shell" \
 west build -t ram_report --build-dir "$TRD_HOME/sw/bld/myapp_shell"
 ```
 
+### Workshop shell application: `myapp_net`
+
+```bash
+west build -p always -b mbv32 "$TRD_HOME/sw/src/myapp_net" \
+    --build-dir "$TRD_HOME/sw/bld/myapp_net"
+
+west build -t ram_report --build-dir "$TRD_HOME/sw/bld/myapp_net"
+```
+
 ## 5. Program the board and run the application
 
 Open the serial console:  
@@ -243,7 +259,7 @@ At the **XSDB prompt**, import the project path from the host environment, conne
 ```tcl
 set TRD_HOME $::env(TRD_HOME)
 connect
-device program "$TRD_HOME/vivado/build/prj/scu35_zephyr.runs/impl_1/system_wrapper.pdi"
+device program "$TRD_HOME/vivado/build/prj/scu200_zephyr.runs/impl_1/system_wrapper.pdi"
 targets
 ```
 
