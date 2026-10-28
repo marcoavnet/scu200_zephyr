@@ -1,0 +1,159 @@
+#include <zephyr/dt-bindings/gpio/gpio.h>
+
+/ {
+    /* User LEDs connected to AXI GPIO. */
+    leds {
+        compatible = "gpio-leds";
+
+        led0: led_0 {
+            gpios = <&peripherals_gpio_LEDs 1 GPIO_ACTIVE_HIGH>;
+            label = "LED0";
+        };
+
+        led1: led_1 {
+            gpios = <&peripherals_gpio_LEDs 5 GPIO_ACTIVE_HIGH>;
+            label = "LED1";
+        };
+    };
+
+    aliases {
+        led0 = &led0;
+        led1 = &led1;
+
+        /* Reference the existing MAC child in the board DTS. */
+        ethernet0 = &axi_ethernet;
+    };
+
+    chosen {
+        /* Use MicroBlaze V local BRAM as system RAM. */
+        zephyr,sram =
+            &lpddr5_lpddrmc_0_ddr_memory;
+    };
+};
+
+/* External SPI NOR flash. */
+&peripherals_axi_quad_spi_0 {
+    status = "okay";
+
+    spi_flash0: flash@0 {
+        compatible = "jedec,spi-nor";
+        status = "okay";
+
+        /* SPI chip-select index. */
+        reg = <0>;
+
+        /* Conservative clock for initial bring-up. */
+        spi-max-frequency = <10000000>;
+
+        jedec-id = [20 bb 18];
+
+        /* SPI NOR capacity is in bits: 128 Mbit = 16 MiB. */
+        size = <0x08000000>;
+    };
+};
+
+/* M24C64 I2C EEPROM. */
+&peripherals_axi_iic_0 {
+    status = "okay";
+
+    eeprom0: eeprom@50 {
+        compatible = "atmel,at24";
+        status = "okay";
+
+        /* 7-bit I2C address. */
+        reg = <0x50>;
+
+        /* EEPROM capacity and page size are in bytes. */
+        size = <8192>;
+        pagesize = <32>;
+
+        /* Two-byte EEPROM memory addresses. */
+        address-width = <16>;
+
+        /* Write-cycle timeout in milliseconds. */
+        timeout = <5>;
+    };
+};
+
+/*
+ * AXI Ethernet subsystem.
+ *
+ * The board DTS already defines this parent and its MAC child.
+ * Keep the existing register range and add the MDIO bus and PHY.
+ */
+&axi_enet {
+    status = "okay";
+
+    eth0_mdio: mdio {
+        compatible = "xlnx,axi-ethernet-1.00.a-mdio";
+        status = "okay";
+
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        /*
+         * Input clock used by the Zephyr 4.x AXIENET MDIO driver
+         * to calculate the MDC divider.
+         *
+         * Confirm the MAC AXI-Lite clock is actually 200 MHz.
+         */
+        clock-frequency = <200000000>;
+
+        eth0_phy: ethernet-phy@1 {
+            /* Generic PHY driver; relies on correct hardware straps. */
+            compatible = "ethernet-phy";
+            status = "okay";
+
+            /* Must match the PHY's strapped MDIO address. */
+            reg = <1>;
+        };
+    };
+};
+
+/* Configure the existing AXI Ethernet MAC. */
+&axi_ethernet {
+    status = "okay";
+
+    /* Associate the MAC with the DP83867 PHY. */
+    phy-handle = <&eth0_phy>;
+    phy-connection-type = "gmii";
+
+    /* DMA controller connected to the MAC's AXI streams. */
+    axistream-connected =
+            <&peripherals_eth0_axi_ethernet_0_dma>;
+
+    /*
+     * Locally administered unicast MAC address.
+     * Assign a unique address to each board on the network.
+     */
+    local-mac-address = [02 00 00 00 00 01];
+
+    /* Hardware checksum offload is disabled in this design. */
+    xlnx,rxcsum = <0>;
+    xlnx,txcsum = <0>;
+
+    /*
+     * Omit optional MAC interrupts for initial bring-up.
+     * MDIO uses polling; packet transfers use the DMA interrupts.
+     */
+    /delete-property/ interrupts;
+    /delete-property/ interrupt-names;
+};
+
+/*
+ * AXI DMA used by Ethernet.
+ * Retain the board's register range and TX/RX interrupt definitions.
+ */
+&peripherals_eth0_axi_ethernet_0_dma {
+    status = "okay";
+
+    /* MM2S transmits packets; S2MM receives packets. */
+    dma-channels = <2>;
+
+    /*
+     * Keep MAC -> DMA references only.
+     * Reverse references can create a devicetree dependency cycle.
+     */
+    /delete-property/ axistream-connected;
+    /delete-property/ axistream-control-connected;
+};
