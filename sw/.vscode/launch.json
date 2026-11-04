@@ -8,7 +8,8 @@
       "options": [
         "myapp_shell",
         "myapp",
-        "myapp_net"
+        "myapp_net",
+        "myapp_httpd"
       ],
       "default": "myapp_shell"
     }
