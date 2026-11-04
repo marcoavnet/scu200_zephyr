@@ -37,8 +37,9 @@ The project is divided into Zephyr software (`sw`) and Vivado hardware (`vivado`
 │   ├── dow
 │   └── src
 │       ├── myapp
+│       ├── myapp_shell
 │       ├── myapp_net
-│       └── myapp_shell
+│       └── myapp_httpd
 └── vivado
     ├── build
     ├── sources
@@ -237,6 +238,15 @@ west build -p always -b mbv32 "$TRD_HOME/sw/src/myapp_net" \
     --build-dir "$TRD_HOME/sw/bld/myapp_net"
 
 west build -t ram_report --build-dir "$TRD_HOME/sw/bld/myapp_net"
+```
+
+### Workshop shell application: `myapp_httpd`
+
+```bash
+west build -p always -b mbv32 "$TRD_HOME/sw/src/myapp_httpd" \
+    --build-dir "$TRD_HOME/sw/bld/myapp_httpd"
+
+west build -t ram_report --build-dir "$TRD_HOME/sw/bld/myapp_httpd"
 ```
 
 ## 5. Program the board and run the application
