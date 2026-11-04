@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101a2b">
+  <title>MicroBlaze V Device Web Interface</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/app.css">
+  <script defer src="/dsp.js"></script>
+  <script defer src="/app.js"></script>
+</head>
+<body>
+<header>
+  <h1 id="device-title">MicroBlaze V Device Web Interface</h1>
+  <nav role="tablist" aria-label="Device pages">
+    <button id="tab-status" role="tab" aria-controls="status" aria-selected="false" tabindex="-1">Status</button>
+    <button id="tab-live" role="tab" aria-controls="live" aria-selected="true">Live View</button>
+    <button id="tab-fft" role="tab" aria-controls="fft" aria-selected="false" tabindex="-1">Live View FFT</button>
+    <button id="tab-control" role="tab" aria-controls="control" aria-selected="false" tabindex="-1">Control</button>
+    <button id="tab-info" role="tab" aria-controls="info" aria-selected="false" tabindex="-1">Info</button>
+  </nav>
+</header>
+<main>
+  <div class="connection-row">
+    <span id="source-badge" class="badge warning">Waiting for source</span>
+    <span id="connection" class="badge warning" role="status">Connecting to device…</span>
+  </div>
+  <section id="live" role="tabpanel" aria-labelledby="tab-live">
+    <div class="section-title"><h2>Live View</h2><button class="freeze" aria-pressed="false">Freeze</button></div>
+    <p class="meta" id="live-meta">Waiting for the first sample block…</p>
+    <div id="live-plots" class="plots"></div>
+    <div id="sample-cards" class="sample-cards"></div>
+  </section>
+  <section id="fft" role="tabpanel" aria-labelledby="tab-fft" hidden>
+    <div class="section-title"><h2>Live View FFT</h2><button class="freeze" aria-pressed="false">Freeze</button></div>
+    <div class="fft-options">
+      <label>Window <select id="fft-window"><option value="hann">Hann</option><option value="rectangular">Rectangular</option></select></label>
+      <span>One-sided amplitude · dBFS · FFT bin number</span>
+    </div>
+    <p class="meta" id="fft-meta">Waiting for the first sample block…</p>
+    <div id="fft-plots" class="plots"></div>
+    <p class="hint">0 dBFS = a full-scale sine peak of 32768. Window gain is compensated. FFT runs in your browser using the exact input length.</p>
+  </section>
+  <section id="status" role="tabpanel" aria-labelledby="tab-status" hidden>
+    <h2>Status</h2>
+    <div id="status-cards" class="status-cards"></div>
+    <h3>Dashboard events</h3>
+    <pre id="events" aria-label="Connection and control events">Starting dashboard…</pre>
+  </section>
+  <section id="control" role="tabpanel" aria-labelledby="tab-control" hidden>
+    <h2>Control</h2>
+    <div class="control-card">
+      <div><h3>LED1</h3><p>Controls the same output as the UART <code>led on/off</code> commands.</p><span id="led-state" class="meta">Waiting for GPIO status…</span></div>
+      <div class="actions"><button id="led-on" disabled>Switch on</button><button id="led-off" disabled>Switch off</button></div>
+    </div>
+    <div class="control-card">
+      <div><h3>Live stream</h3><p>Pause or resume WebSocket transmission. Acquisition continues.</p><span id="stream-state" class="meta">Waiting for device status…</span></div>
+      <div class="actions"><button id="stream-toggle" disabled>Pause stream</button></div>
+    </div>
+    <p class="hint">Freeze holds the displayed frame in this browser while the connection continues receiving data.</p>
+    <p id="control-result" role="status"></p>
+  </section>
+  <section id="info" role="tabpanel" aria-labelledby="tab-info" hidden>
+    <h2>Info</h2>
+    <dl id="device-info"><dt>Device</dt><dd>Waiting for device information…</dd></dl>
+    <p class="hint">Demo waveforms are generated in firmware. Real sensor values appear after an acquisition thread publishes sample blocks.</p>
+  </section>
+  <noscript>This dashboard requires JavaScript to display live measurements.</noscript>
+</main>
+</body>
+</html>

@@ -1,0 +1,58 @@
+:root { color-scheme: light; font-family: Arial, Helvetica, sans-serif; color:#111827; background:#f4f4f4; }
+* { box-sizing:border-box; }
+body { margin:0; padding:16px 12px 24px; }
+h1 { margin:2px 0 18px; font-size:27px; line-height:1.2; color:#080b10; }
+h2 { margin:0; font-size:21px; }
+h3 { margin:0 0 9px; font-size:16px; }
+button, select { font:inherit; font-size:13px; }
+button { background:#fff; border:1px solid #dedfe2; border-radius:5px; padding:10px 17px; cursor:pointer; color:#253140; }
+button:hover { background:#edf1f6; }
+button:focus-visible, select:focus-visible { outline:3px solid #38bdf8; outline-offset:2px; }
+button:disabled { opacity:.45; cursor:default; }
+nav { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:17px; }
+nav [aria-selected="true"] { color:white; background:#333; border-color:#333; }
+main { position:relative; background:#fff; border-radius:9px; padding:26px 18px 22px; box-shadow:0 0 4px #00000016; }
+.connection-row { position:absolute; top:27px; right:18px; display:flex; justify-content:flex-end; align-items:center; gap:8px; }
+.badge { display:inline-block; padding:5px 11px; border-radius:18px; font-size:12px; }
+.warning { background:#fff0cb; color:#865200; }
+.good { background:#ddf6e7; color:#166534; }
+.neutral { background:#e9eef6; color:#43546e; }
+.error { background:#ffe4e6; color:#a41630; }
+.section-title { display:flex; align-items:center; gap:12px; min-height:30px; margin:6px 0 25px; padding-right:430px; }
+.freeze { padding:5px 12px; font-size:12px; background:#f5f7fb; border-color:#d3dce9; }
+.freeze[aria-pressed="true"] { background:#dbeafe; color:#1e40af; }
+.meta { color:#61728d; font-size:12px; line-height:1.6; }
+p.meta { margin:0 0 10px; }
+.plots { display:grid; gap:11px; }
+.plot { border-radius:5px; overflow:hidden; background:#101a2b; border:1px solid #1f2c40; }
+canvas { display:block; width:100%; height:150px; }
+.sample-cards { display:flex; flex-wrap:wrap; gap:18px; margin-top:15px; }
+.sample-card { border-left:3px solid var(--channel); padding:0 10px; min-width:140px; font-size:13px; line-height:1.5; }
+.sample-card strong { display:block; font-size:19px; color:#111; }
+.sample-card small { color:#61728d; font-size:12px; }
+.hint { color:#64748b; font-size:12px; line-height:1.6; margin:17px 0 0; }
+.fft-options { display:flex; gap:20px; align-items:center; flex-wrap:wrap; color:#61728d; font-size:12px; margin:-9px 0 15px; }
+select { padding:5px 9px; border:1px solid #cbd5e1; border-radius:4px; background:white; }
+.status-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(175px,1fr)); gap:14px; margin:25px 0 30px; }
+.status-card { padding:18px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; }
+.status-card span { display:block; font-size:12px; color:#64748b; margin-bottom:8px; }
+.status-card strong { font-size:21px; font-weight:600; }
+pre { white-space:pre-wrap; background:#101a2b; color:#b9c9dd; padding:18px; border-radius:5px; height:230px; overflow:auto; font:12px/1.7 monospace; }
+.control-card { display:flex; justify-content:space-between; align-items:center; gap:20px; border:1px solid #e2e8f0; border-radius:6px; padding:20px; margin-top:20px; }
+.control-card p { margin:0 0 8px; color:#64748b; font-size:13px; line-height:1.6; }
+.actions { display:flex; gap:8px; flex-shrink:0; }
+#control-result { font-size:13px; min-height:20px; color:#166534; }
+#control-result.failed { color:#b91c1c; }
+dl { display:grid; grid-template-columns:180px 1fr; gap:13px 20px; margin-top:26px; font-size:14px; }
+dt { color:#64748b; } dd { margin:0; overflow-wrap:anywhere; }
+[hidden] { display:none !important; }
+@media(max-width:1000px) {
+  .connection-row { position:static; justify-content:flex-start; flex-wrap:wrap; margin-bottom:20px; }
+  .section-title { padding-right:0; margin-top:0; }
+}
+@media(max-width:600px) {
+  body { padding:13px 7px; } h1 { font-size:23px; } main { padding:18px 10px; }
+  nav { gap:5px; } nav button { padding:9px 11px; font-size:12px; }
+  canvas { height:155px; } .sample-cards { gap:13px; } .sample-card { min-width:125px; }
+  .control-card { align-items:flex-start; flex-direction:column; } dl { grid-template-columns:100px 1fr; }
+}

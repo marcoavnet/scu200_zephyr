@@ -1,0 +1,39 @@
+mainmenu "MicroBlaze V device dashboard"
+
+source "Kconfig.zephyr"
+
+menu "Device dashboard"
+
+config APP_HTTP_PORT
+    int "HTTP listening port"
+    range 1 65535
+    default 80
+
+config APP_DEVICE_NAME
+    string "Dashboard device name"
+    default "MicroBlaze V Device Web Interface"
+
+config APP_LIVE_FRAMES
+    int "Maximum samples per channel in one live frame"
+    range 16 4096
+    default 2000
+
+config APP_LIVE_RATE_HZ
+    int "Maximum WebSocket updates per second"
+    range 1 50
+    default 20
+
+config APP_DEMO_DATA
+    bool "Generate demo waveforms until real acquisition is integrated"
+    default y
+    help
+      Disable this before connecting a real acquisition thread. The demo and
+      real acquisition must not publish concurrently. With this disabled the
+      browser waits for the first live_data_publish() call.
+
+config APP_DEMO_SAMPLE_RATE_HZ
+    int "Nominal sample rate of the demo waveform"
+    range 1 100000000
+    default 20000
+
+endmenu
