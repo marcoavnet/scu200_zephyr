@@ -1,7 +1,10 @@
 :root { color-scheme: light; font-family: Arial, Helvetica, sans-serif; color:#111827; background:#f4f4f4; }
 * { box-sizing:border-box; }
 body { margin:0; padding:16px 12px 24px; }
-h1 { margin:2px 0 18px; font-size:27px; line-height:1.2; color:#080b10; }
+h1 { margin:2px 0 0; font-size:27px; line-height:1.2; color:#080b10; }
+.header-row { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px 24px; margin-bottom:18px; }
+.header-logos { display:flex; align-items:center; flex-wrap:wrap; gap:18px; max-width:100%; }
+.header-logos img { display:block; width:auto; height:24px; }
 h2 { margin:0; font-size:21px; }
 h3 { margin:0 0 9px; font-size:16px; }
 button, select { font:inherit; font-size:13px; }
