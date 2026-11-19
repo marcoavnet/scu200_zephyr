@@ -1,4 +1,5 @@
 {
     "editor.renderWhitespace": "all",
-    "C_Cpp.default.compileCommands": "${workspaceFolder}/bld/myapp_shell/compile_commands.json"
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/bld/myapp_shell/compile_commands.json",
+    "zephyr.gdbPath": "dow/zephyr-sdk-0.17.4/riscv64-zephyr-elf/bin/riscv64-zephyr-elf-gdb"
 }

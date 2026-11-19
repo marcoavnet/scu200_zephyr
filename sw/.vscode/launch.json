@@ -15,13 +15,14 @@
     }
   ],
   "configurations": [
+
     {
       "name": "Zephyr: Run",
       "type": "gdb",
       "request": "attach",
       "executable": "${workspaceFolder}/bld/${input:app}/zephyr/zephyr.elf",
       "cwd": "${workspaceFolder}",
-      "gdbpath": "${workspaceFolder}/dow/zephyr-sdk-0.17.4/riscv64-zephyr-elf/bin/riscv64-zephyr-elf-gdb",
+      "gdbpath": "${workspaceFolder}/${config:zephyr.gdbPath}",
       "debugger_args": [
         "-iex",
         "set remotetimeout 30"
@@ -41,7 +42,7 @@
       "request": "attach",
       "executable": "${workspaceFolder}/bld/${input:app}/zephyr/zephyr.elf",
       "cwd": "${workspaceFolder}",
-      "gdbpath": "${workspaceFolder}/dow/zephyr-sdk-0.17.4/riscv64-zephyr-elf/bin/riscv64-zephyr-elf-gdb",
+      "gdbpath": "${workspaceFolder}/${config:zephyr.gdbPath}",
       "debugger_args": [
         "-iex",
         "set remotetimeout 30"
@@ -51,7 +52,7 @@
       "stopAtConnect": false,
       "autorun": [
         "load",
-        "tbreak main"
+        "break main"
       ],
       "printCalls": false,
       "showDevDebugOutput": false

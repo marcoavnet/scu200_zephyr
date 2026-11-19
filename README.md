@@ -19,6 +19,7 @@ The workshop uses Vivado/Vitis 2026.1, the AMD Zephyr branch `xlnx_rel_v2026.2`,
 
 - A Linux x86-64 host with Bash.
 - Vivado and Vitis 2026.1, with XSDB available.
+- AXI 1G/2.5G Ethernet Subsystem License (Eval or Full)
 - Git, Make, Python 3 with virtual environment support, `wget`, `pv`, and `tar` with XZ support.
 - `tio` for the serial console and VS Code for the optional editor workflow.
 - The workshop project sources and the target board connected for programming and serial access.
@@ -93,7 +94,7 @@ export ZEPHYR_BASE="$TRD_HOME/sw/dow/zephyr"
 Load the Vivado environment. Adjust the installation path if necessary:
 
 ```bash
-source /opt/Xilinx/2026.1/Vivado/settings64.sh
+source /opt/Xilinx/2026.2/Vivado/settings64.sh
 ```
 
 
